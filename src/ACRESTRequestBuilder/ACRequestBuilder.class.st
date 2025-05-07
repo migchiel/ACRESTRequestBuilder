@@ -1,8 +1,9 @@
 Class {
 	#name : 'ACRequestBuilder',
-	#superclass : 'ZnClient',
+	#superclass : 'Object',
 	#instVars : [
-		'showProgress'
+		'showProgress',
+		'httpClient'
 	],
 	#category : 'ACRESTRequestBuilder',
 	#package : 'ACRESTRequestBuilder'
@@ -40,18 +41,18 @@ ACRequestBuilder >> executeShowingProgress [
 { #category : 'executing' }
 ACRequestBuilder >> executeWithoutShowingProgress [
 
-	self ifFail: [ :exception |
+	httpClient ifFail: [ :exception |
 		((exception isKindOf: ZnHttpUnsuccessful) and: [
 			 #( 429 ) includes: exception response code ]) ifTrue: [
 			self recoverFromApiLimit.
 			exception signaler execute ] ].
-	^ super execute
+	^ httpClient execute
 ]
 
 { #category : 'initialization' }
 ACRequestBuilder >> initialize [
 
-	super initialize.
+	httpClient := ZnClient new.
 	showProgress := true.
 	self setDefaults
 ]
@@ -71,8 +72,8 @@ ACRequestBuilder >> recoverFromApiLimit [
 
 { #category : 'initialization' }
 ACRequestBuilder >> setDefaults [
-
-	self
+	self signalProgress: true.
+	httpClient
 		systemPolicy;
 		https;
 		forJsonREST;
@@ -84,6 +85,6 @@ ACRequestBuilder >> setDefaults [
 { #category : 'signalling' }
 ACRequestBuilder >> signalProgress: aBoolean [
 
-	super signalProgress: aBoolean.
+	httpClient signalProgress: aBoolean.
 	showProgress := aBoolean
 ]
